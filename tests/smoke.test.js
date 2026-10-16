@@ -1,29 +1,52 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const path = require('node:path');
+
+const workflowPath = path.join(
+  __dirname,
+  '..',
+  '.github',
+  'workflows',
+  'autotests.yml'
+);
+
+const packagePath = path.join(__dirname, '..', 'package.json');
 
 test('project contains the CI workflow', () => {
-  assert.equal(fs.existsSync('.github/workflows/autotests.yml'), true);
+  assert.ok(fs.existsSync(workflowPath));
 });
 
 test('workflow uploads a report artifact even after failure', () => {
+  const workflow = fs.readFileSync(workflowPath, 'utf8');
+
   assert.ok(workflow.includes('if: always()'));
+  assert.ok(workflow.includes('actions/upload-artifact'));
 });
 
 test('package scripts define the required checks', () => {
-  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assert.equal(typeof pkg.scripts.typecheck, 'string');
-  assert.equal(typeof pkg.scripts.lint, 'string');
-  assert.equal(typeof pkg.scripts['format:check'], 'string');
-  assert.equal(typeof pkg.scripts.test, 'string');
+  const packageJson = JSON.parse(
+    fs.readFileSync(packagePath, 'utf8')
+  );
+
+  assert.ok(packageJson.scripts.typecheck);
+  assert.ok(packageJson.scripts.lint);
+  assert.ok(packageJson.scripts['format:check']);
+  assert.ok(packageJson.scripts.test);
 });
 
 test('write a simple HTML report artifact for the lesson', () => {
-  fs.mkdirSync('playwright-report', { recursive: true });
+  const reportDir = path.join(__dirname, '..', 'playwright-report');
+
+  fs.mkdirSync(reportDir, { recursive: true });
+
+  const reportPath = path.join(reportDir, 'index.html');
+
   fs.writeFileSync(
-    'playwright-report/index.html',
-    '<!doctype html><html lang="en"><meta charset="utf-8"><title>CI Test Report</title><h1>CI smoke tests</h1><p>Report artifact created by the T41 demo project. This is a simple demo report, not the native Playwright HTML reporter.</p></html>',
+    reportPath,
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Test Report</title></head><body><h1>Autotests report</h1><p>CI workflow completed.</p></body></html>',
     'utf8'
   );
-  assert.equal(fs.existsSync('playwright-report/index.html'), true);
+
+  assert.ok(fs.existsSync(reportPath));
 });
