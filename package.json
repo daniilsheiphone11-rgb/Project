@@ -1,0 +1,12 @@
+{
+  "name": "t41-ci-autotests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Учебный проект для демонстрации GitHub Actions CI",
+  "scripts": {
+    "typecheck": "node scripts/check.js typecheck",
+    "lint": "node scripts/check.js lint",
+    "format:check": "node scripts/check.js format",
+    "test": "node --test"
+  }
+}
